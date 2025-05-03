@@ -1,0 +1,7 @@
+body {
+  background: linear-gradient(rgb(47, 52, 61) 0%, rgb(25, 30, 36) 100%);
+}
+
+.bg {
+  min-height: 100vh;
+}
