@@ -1,13 +1,14 @@
 // TODO: Init calculator
-function initCal() {
+function initCal(display) {
   console.log("Welcome!");
-  allClear();
-  setDisplayOutput();
+
+  allClear(display);
+  setDisplayOutput(display, 0);
   console.log("Calculator initialized");
 }
 
 // TODO: Get value from inputs
-function getBtnInput() {
+function getBtnInput(display) {
   const cal = document.querySelector("#calculator");
 
   cal.addEventListener("click", (e) => {
@@ -18,6 +19,7 @@ function getBtnInput() {
     if (button) {
       const value = button.querySelector(".btn-txt").textContent;
       console.log(`Clicked ${value}`);
+      setDisplayOutput(display, value);
     }
   });
 }
@@ -26,9 +28,16 @@ function getBtnInput() {
 /**
  * @param {string} num
  */
-function setDisplayOutput(num = "12345.678") {
-  const output = document.querySelector("#output");
-  output.textContent = num;
+function setDisplayOutput(display, num = "12345.678") {
+  const numeric = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+  if (display.textContent === "0" && num != 0) {
+    // Replace 0
+    display.textContent = num in numeric ? num : "0.";
+  } else if (display.textContent !== "0") {
+    // Append number
+    display.textContent += num;
+  }
+  console.log(`Output value: ${display.textContent}`);
 }
 // TODO: Save first number value
 // TODO: Save operator value
@@ -42,21 +51,21 @@ function setDisplayOutput(num = "12345.678") {
 // TODO: / ops
 // TODO: negate ops +-
 // TODO: All Clear ops
-function allClear() {
+function allClear(display) {
+  display.textContent = 0;
   console.log("All value cleared!");
 }
 // TODO: Clear ops
 // TODO: Keyboard support
 
 // main
-function main() {
-  let firstBuffer = 0;
-  let secondBuffer = 0;
-  let operator = "";
+function main() {}
 
-  initCal();
-  getBtnInput();
-  console.log(getBtnInput());
-}
+const output = document.querySelector("#output");
+// let allClear = true;
+let firstBuffer = 0;
+let secondBuffer = 0;
+let operator = "";
 
-main();
+initCal(output);
+getBtnInput(output);
