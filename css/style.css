@@ -1,7 +1,52 @@
-body {
-  background: linear-gradient(rgb(47, 52, 61) 0%, rgb(25, 30, 36) 100%);
+.noto-sans-regular {
+  font-family: "Noto Sans", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: "wdth" 100;
 }
 
-.bg {
+body {
+  background: linear-gradient(rgb(47, 52, 61) 0%, rgb(25, 30, 36) 100%);
+  font-family: "Noto Sans";
+  color: white;
+}
+
+#bg {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#calculator {
+  width: 325px;
+  height: 525px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(rgb(47, 52, 61) 0%, rgb(25, 30, 36) 100%);
+  box-shadow: 0px 5px 8px 5px rgba(0, 0, 0, 0.2);
+  border-radius: 34px;
+}
+
+.cal-element {
+  box-sizing: border-box;
+  width: 300px;
+  height: 75px;
+  border: solid black 1px; /*debug*/
+}
+
+#cal-misc {
+  height: calc((15 / 525) * 100%);
+}
+
+#cal-display {
+  height: calc((110 / 525) * 100%);
+}
+
+.cal-btn-row {
+  height: calc((75 / 525) * 100%);
 }
