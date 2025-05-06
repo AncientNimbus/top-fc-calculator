@@ -1,13 +1,19 @@
-// TODO: Init calculator
+const numeric = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+const output = document.querySelector("#output");
+let firstBuffer = 0;
+let secondBuffer = 0;
+let operator = "";
+
+// Init calculator
 function initCal(display) {
   console.log("Welcome!");
 
   allClear(display);
-  setDisplayOutput(display, 0);
+  insertNumber(display, 0);
   console.log("Calculator initialized");
 }
 
-// TODO: Get value from inputs
+// Get value from inputs
 function getBtnInput(display) {
   const cal = document.querySelector("#calculator");
 
@@ -18,33 +24,70 @@ function getBtnInput(display) {
 
     if (button) {
       const value = button.querySelector(".btn-txt").textContent;
-      console.log(`Clicked ${value}`);
-      setDisplayOutput(display, value);
+      //   console.log(button);
+
+      if (button.matches(".ops")) {
+        // Trigger cal function
+        console.log(button.id);
+        runOps(button.id);
+      } else {
+        // Insert Number
+        insertNumber(display, value);
+      }
     }
   });
 }
 
 // TODO: Display number
 /**
+ * @param {HTMLDivElement} display
  * @param {string} num
  */
-function setDisplayOutput(display, num = "12345.678") {
-  const numeric = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+function insertNumber(display, num = "12345.678") {
+  const prevValue = Number(display.textContent);
+  let currentValue = prevValue;
   if (display.textContent === "0" && num != 0) {
     // Replace 0
     display.textContent = num in numeric ? num : "0.";
+    currentValue = Number(display.textContent);
   } else if (display.textContent !== "0") {
     // Append number
     display.textContent += num;
+    currentValue = Number(display.textContent);
   }
-  console.log(`Output value: ${display.textContent}`);
+
+  console.log(`Output value: ${currentValue}`);
 }
 // TODO: Save first number value
+function saveToBuffer(value) {}
 // TODO: Save operator value
 // TODO: Save second number value
 // TODO: e-notation conversion (large value)
 // TODO: Single floating point support
 // TODO: Percent conversion
+function runOps(opsName) {
+  switch (opsName) {
+    case "cmd-ac":
+      allClear(output);
+      break;
+    case "cmd-negate":
+      break;
+    case "cmd-percent":
+      break;
+    case "cmd-div":
+      break;
+    case "cmd-mul":
+      break;
+    case "cmd-sub":
+      break;
+    case "cmd-sum":
+      break;
+    case "cmd-eq":
+      break;
+    default:
+      break;
+  }
+}
 // TODO: + ops
 // TODO: - ops
 // TODO: * ops
@@ -57,15 +100,6 @@ function allClear(display) {
 }
 // TODO: Clear ops
 // TODO: Keyboard support
-
-// main
-function main() {}
-
-const output = document.querySelector("#output");
-// let allClear = true;
-let firstBuffer = 0;
-let secondBuffer = 0;
-let operator = "";
 
 initCal(output);
 getBtnInput(output);

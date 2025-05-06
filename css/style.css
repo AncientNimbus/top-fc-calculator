@@ -13,10 +13,20 @@ body {
   user-select: none;
 }
 
+header,
+footer {
+  width: 100%;
+}
+
 header {
   margin: 1rem 0 2rem;
   height: 10vh;
   opacity: 50%;
+}
+
+header h1 {
+  font-weight: 100;
+  text-align: center;
 }
 
 main {
@@ -27,6 +37,14 @@ footer {
   margin-top: 8rem;
   min-height: 5vh;
   opacity: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+footer p {
+  font-weight: 100;
+  text-align: center;
 }
 
 a {
@@ -93,7 +111,7 @@ a {
 #output {
   width: 100%;
   margin: 0.5rem;
-  font-size: 3.4375rem;
+  font-size: 2.125rem;
   text-align: end;
 }
 
