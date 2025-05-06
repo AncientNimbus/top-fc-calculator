@@ -92,7 +92,7 @@ a {
 
 #output {
   width: 100%;
-  margin: 0 5px;
+  margin: 0.5rem;
   font-size: 3.4375rem;
   text-align: end;
 }
