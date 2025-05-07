@@ -11,7 +11,7 @@ const ops = {
   mul: (x, y) => x * y,
   div: (x, y) => (y !== 0 ? x / y : "Undefined"),
   negate: (x) => (x !== 0 ? x * -1 : 0),
-  percent: (x) => (x * 0.01).toFixed(20),
+  percent: (x) => (x * 0.01).toFixed(10),
 };
 let isNum1Saved = false;
 
@@ -26,35 +26,41 @@ function initCal() {
 // Get value from inputs
 function getBtnInput() {
   const cal = document.querySelector("#calculator");
-
   cal.addEventListener("click", (e) => {
     let target = e.target;
-
     const button = target.closest(".cal-btn");
-
     if (button) {
       const value = button.querySelector(".btn-txt").textContent;
-
       if (button.matches(".ops")) {
         // Trigger operation
-        // console.log(button.id.replace("cmd-", ""));
         runOps(button.id.replace("cmd-", ""), value);
       } else {
-        // Insert Number
         insertNumber(value);
       }
     }
   });
 }
 
-function updateDisplay() {
+function updateDisplay(isEval = false) {
   const display = document.querySelector("#output");
-  let value = !isNum1Saved ? buffers.num1 : buffers.num2;
-  value =
-    value.length < 15 || value == 0
-      ? Number(value)
-      : Number(value).toExponential(3);
-  display.textContent = value;
+  const processValue = (isEval) => {
+    let value = !isNum1Saved ? buffers.num1 : buffers.num2;
+
+    if (isEval) {
+      value = buffers.num1;
+    }
+
+    if (value.length < 15 || value == 0) {
+      console.log(value);
+      return Number(value);
+    } else {
+      // BUG: e-notation handling not working properly
+      console.log(value);
+      return Number(value);
+    }
+  };
+
+  display.textContent = processValue(isEval);
 }
 
 /**
@@ -75,11 +81,8 @@ function insertNumber(num = "12345.678") {
     }
     saveNumToBuffer(current);
   };
-
   !isNum1Saved ? processInput(buffers.num1) : processInput(buffers.num2);
-
   updateDisplay();
-
   debug();
 }
 
@@ -97,24 +100,35 @@ function runOps(opsName, value) {
       allClear(output);
       break;
     case "negate":
+      // BUG: Grab on screen value instead of always second buffer
       !isNum1Saved
         ? (buffers.num1 = ops.negate(Number(buffers.num1)))
-        : (buffers.num2 = ops.negate(buffers.num2));
+        : (buffers.num2 = ops.negate(Number(buffers.num2)));
       updateDisplay();
       break;
     case "percent":
+      // BUG: Grab on screen value instead of always second buffer
       !isNum1Saved
         ? (buffers.num1 = ops.percent(Number(buffers.num1)))
-        : (buffers.num2 = ops.percent(buffers.num2));
+        : (buffers.num2 = ops.percent(Number(buffers.num2)));
       updateDisplay();
       break;
     case "eq":
-      // TODO: Push result to buffer 1, keep buffer 2
-      // TODO: Perform calculation
+      if (isNum1Saved) {
+        calculate(opsName);
+      }
       break;
     default:
-      buffers.op = opsName;
-      isNum1Saved = true;
+      if (buffers.op !== null) {
+        console.log("a");
+        calculate();
+        buffers.op = opsName;
+      } else {
+        console.log("b");
+        buffers.op = opsName;
+        isNum1Saved = true;
+      }
+      clear();
       console.log(buffers);
       break;
   }
@@ -131,7 +145,15 @@ function allClear() {
   console.log("All value cleared!");
 }
 
-// TODO: Clear ops
+function calculate() {
+  buffers.num1 = ops[buffers.op](Number(buffers.num1), Number(buffers.num2));
+  updateDisplay(true);
+}
+
+// Clear ops
+function clear() {
+  buffers.num2 = 0;
+}
 // TODO: Swap AC to C when first non-zero input is register
 // TODO: Keyboard support
 
