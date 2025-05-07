@@ -11,22 +11,20 @@ const ops = {
   mul: (x, y) => x * y,
   div: (x, y) => (y !== 0 ? x / y : "Undefined"),
   negate: (x) => (x !== 0 ? x * -1 : 0),
-  percent: (x) => x * 0.01,
+  percent: (x) => (x * 0.01).toFixed(20),
 };
 let isNum1Saved = false;
 
 // Init calculator
-function initCal(display) {
-  //   console.log("Welcome!");
-
-  allClear(display);
-  insertNumber(display, 0);
+function initCal() {
+  allClear();
+  insertNumber(0);
 
   console.log("Calculator initialized");
 }
 
 // Get value from inputs
-function getBtnInput(display) {
+function getBtnInput() {
   const cal = document.querySelector("#calculator");
 
   cal.addEventListener("click", (e) => {
@@ -43,22 +41,26 @@ function getBtnInput(display) {
         runOps(button.id.replace("cmd-", ""), value);
       } else {
         // Insert Number
-        insertNumber(display, value);
+        insertNumber(value);
       }
     }
   });
 }
 
-// TODO: Update display
-function updateDisplay(display) {
-  display.textContent = !isNum1Saved ? buffers.num1 : buffers.num2;
+function updateDisplay() {
+  const display = document.querySelector("#output");
+  let value = !isNum1Saved ? buffers.num1 : buffers.num2;
+  value =
+    value.length < 15 || value == 0
+      ? Number(value)
+      : Number(value).toExponential(3);
+  display.textContent = value;
 }
-// Insert number
+
 /**
- * @param {HTMLDivElement} display
  * @param {string} num
  */
-function insertNumber(display, num = "12345.678") {
+function insertNumber(num = "12345.678") {
   const processInput = (valueInBuffer) => {
     let current = 0;
     current = valueInBuffer;
@@ -74,19 +76,11 @@ function insertNumber(display, num = "12345.678") {
     saveNumToBuffer(current);
   };
 
-  if (!isNum1Saved) {
-    // Process num1
-    processInput(buffers.num1);
-  } else {
-    // Process num2
-    processInput(buffers.num2);
-  }
+  !isNum1Saved ? processInput(buffers.num1) : processInput(buffers.num2);
 
-  updateDisplay(display);
+  updateDisplay();
 
-  console.log(`first: ${buffers.num1}`);
-  console.log(`ops: ${buffers.op}`);
-  console.log(`second: ${buffers.num2}`);
+  debug();
 }
 
 function saveNumToBuffer(value) {
@@ -97,29 +91,26 @@ function saveNumToBuffer(value) {
   }
 }
 
-// TODO: Save operator value
-// TODO: Save second number value
-// TODO: e-notation conversion (large value)
-// TODO: Single floating point support
 function runOps(opsName, value) {
   switch (opsName) {
     case "ac":
       allClear(output);
       break;
     case "negate":
-      isNum1Saved
-        ? (buffers.num1 = ops.negate(buffers.num1))
+      !isNum1Saved
+        ? (buffers.num1 = ops.negate(Number(buffers.num1)))
         : (buffers.num2 = ops.negate(buffers.num2));
-      console.log(buffers);
+      updateDisplay();
       break;
     case "percent":
-      isNum1Saved
-        ? (buffers.num1 = ops.percent(buffers.num1))
+      !isNum1Saved
+        ? (buffers.num1 = ops.percent(Number(buffers.num1)))
         : (buffers.num2 = ops.percent(buffers.num2));
-      console.log(buffers);
+      updateDisplay();
       break;
     case "eq":
-      // Push result to buffer 1, keep buffer 2
+      // TODO: Push result to buffer 1, keep buffer 2
+      // TODO: Perform calculation
       break;
     default:
       buffers.op = opsName;
@@ -127,19 +118,30 @@ function runOps(opsName, value) {
       console.log(buffers);
       break;
   }
+  debug();
 }
 
-function allClear(display) {
+function allClear() {
   buffers.num1 = 0;
   buffers.num2 = 0;
   buffers.op = null;
   isNum1Saved = false;
-  updateDisplay(display);
+  updateDisplay();
 
   console.log("All value cleared!");
 }
+
 // TODO: Clear ops
+// TODO: Swap AC to C when first non-zero input is register
 // TODO: Keyboard support
 
-initCal(output);
-getBtnInput(output);
+function debug(isOn = true) {
+  if (isOn) {
+    console.log(`first: ${buffers.num1}`);
+    console.log(`ops: ${buffers.op}`);
+    console.log(`second: ${buffers.num2}`);
+  }
+}
+
+initCal();
+getBtnInput();
