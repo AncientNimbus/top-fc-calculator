@@ -5,6 +5,7 @@ const buffers = {
   num2: 0,
   op: null,
 };
+let lastAction = buffers;
 const ops = {
   sum: (x, y) => x + y,
   sub: (x, y) => x - y,
@@ -14,6 +15,7 @@ const ops = {
   percent: (x) => (x * 0.01).toFixed(10),
 };
 let isNum1Saved = false;
+let isResultShown = false;
 
 // Init calculator
 function initCal() {
@@ -41,39 +43,72 @@ function getBtnInput() {
   });
 }
 
-function updateDisplay(isEval = false) {
+function updateDisplay(isEval = false, data = buffers) {
   const display = document.querySelector("#output");
-  const processValue = (isEval) => {
-    let value = !isNum1Saved ? buffers.num1 : buffers.num2;
+  const processValue = (isEval, memory) => {
+    let value = !isNum1Saved ? memory.num1 : memory.num2;
 
     if (isEval) {
-      value = buffers.num1;
+      value = memory.num1;
+      isResultShown = true; // Set the flag when displaying a result
+    } else {
+      value = !isNum1Saved ? memory.num1 : memory.num2;
+    }
+
+    if (value == "-") {
+      return value;
     }
 
     if (value.length < 15 || value == 0) {
-      console.log(value);
       return Number(value);
     } else {
       // BUG: e-notation handling not working properly
-      console.log(value);
       return Number(value);
     }
   };
 
-  display.textContent = processValue(isEval);
+  display.textContent = processValue(isEval, data);
+  debug();
 }
 
 /**
  * @param {string} num
  */
 function insertNumber(num = "12345.678") {
+  if (isResultShown && num in numeric) {
+    allClear();
+    isResultShown = false;
+  } else if (isResultShown && num === "-") {
+    // Special case for entering a negative number right after a calculation
+    buffers.num1 = lastAction.num1;
+    buffers.num1 = ops.negate(Number(buffers.num1));
+    updateDisplay();
+    return;
+  } else if (isResultShown && num === ".") {
+    // Special case for entering a decimal right after a calculation
+    allClear();
+    isResultShown = false;
+    num = "0.";
+  }
   const processInput = (valueInBuffer) => {
     let current = 0;
     current = valueInBuffer;
     const hasDot = String(current).includes(".");
 
+    console.log(`valueInBuffer: ${valueInBuffer}`);
+
+    if (valueInBuffer == "0" && num == "-") {
+      current = "-";
+      saveNumToBuffer(current);
+      return;
+    }
+
     if (valueInBuffer == "0" && num != 0) {
-      current = num in numeric ? num : "0.";
+      if (num in numeric) {
+        current = num;
+      } else {
+        current = "0.";
+      }
     } else if (valueInBuffer != "0") {
       if ((num === "." && !hasDot) || num in numeric) {
         current += num;
@@ -83,7 +118,6 @@ function insertNumber(num = "12345.678") {
   };
   !isNum1Saved ? processInput(buffers.num1) : processInput(buffers.num2);
   updateDisplay();
-  debug();
 }
 
 function saveNumToBuffer(value) {
@@ -100,33 +134,78 @@ function runOps(opsName, value) {
       allClear(output);
       break;
     case "negate":
-      // BUG: Grab on screen value instead of always second buffer
-      !isNum1Saved
-        ? (buffers.num1 = ops.negate(Number(buffers.num1)))
-        : (buffers.num2 = ops.negate(Number(buffers.num2)));
+      // DONE: Grab on screen value instead of always second buffer
+      if (isResultShown) {
+        buffers.num1 = lastAction.num1;
+        buffers.num1 = ops.negate(Number(buffers.num1));
+      } else {
+        !isNum1Saved
+          ? (buffers.num1 = ops.negate(Number(buffers.num1)))
+          : (buffers.num2 = ops.negate(Number(buffers.num2)));
+      }
       updateDisplay();
       break;
     case "percent":
-      // BUG: Grab on screen value instead of always second buffer
-      !isNum1Saved
-        ? (buffers.num1 = ops.percent(Number(buffers.num1)))
-        : (buffers.num2 = ops.percent(Number(buffers.num2)));
+      // DONE: Grab on screen value instead of always second buffer
+      if (isResultShown) {
+        // If displaying a result, apply percent to that result
+        buffers.num1 = lastAction.num1;
+        buffers.num1 = ops.percent(Number(buffers.num1));
+      } else {
+        !isNum1Saved
+          ? (buffers.num1 = ops.percent(Number(buffers.num1)))
+          : (buffers.num2 = ops.percent(Number(buffers.num2)));
+      }
       updateDisplay();
       break;
     case "eq":
-      if (isNum1Saved) {
-        calculate(opsName);
+      if (isNum1Saved && buffers.op !== null) {
+        calculate();
+        lastAction = { ...buffers };
+        buffers.num1 = 0;
+        buffers.num2 = 0;
+        buffers.op = null;
+      } else if (isNum1Saved && buffers.op === null) {
+        // Repeat last
+        console.log("repeat last");
+        calculate(true);
+      }
+      break;
+    case "sub":
+      // Handle minus sign for both num1 and num2
+      if (buffers.num1 == 0 && !isNum1Saved) {
+        insertNumber("-");
+      } else if (isNum1Saved && buffers.num2 == 0) {
+        insertNumber("-");
+      } else {
+        // Normal Sub operation
+        if (isResultShown) {
+          buffers.num1 = lastAction.num1;
+          isResultShown = false;
+        }
+
+        if (buffers.op !== null && buffers.num2 != 0 && buffers.num2 != "-") {
+          calculate();
+        }
+        buffers.op = "sub";
+        isNum1Saved = buffers.num1 !== "-" ? true : false;
       }
       break;
     default:
-      if (buffers.op !== null) {
+      if (isResultShown) {
+        buffers.num1 = lastAction.num1;
+        isResultShown = false;
+      }
+
+      if (buffers.op !== null && buffers.num2 != 0 && buffers.num2 != "-") {
         console.log("a");
         calculate();
         buffers.op = opsName;
       } else {
         console.log("b");
-        buffers.op = opsName;
-        isNum1Saved = true;
+        if (buffers.num1 !== "-") buffers.op = opsName;
+        isNum1Saved = buffers.num1 !== "-" ? true : false;
+        console.log(isNum1Saved);
       }
       clear();
       console.log(buffers);
@@ -140,20 +219,38 @@ function allClear() {
   buffers.num2 = 0;
   buffers.op = null;
   isNum1Saved = false;
+  isResultShown = false;
   updateDisplay();
 
   console.log("All value cleared!");
 }
 
-function calculate() {
-  buffers.num1 = ops[buffers.op](Number(buffers.num1), Number(buffers.num2));
-  updateDisplay(true);
+function calculate(repeatLast) {
+  if (!repeatLast) {
+    buffers.num1 = ops[buffers.op](Number(buffers.num1), Number(buffers.num2));
+    updateDisplay(true, buffers);
+  } else {
+    console.log(lastAction);
+    lastAction.num1 = ops[lastAction.op](
+      Number(lastAction.num1),
+      Number(lastAction.num2)
+    );
+    buffers.num1 = lastAction.num1;
+    updateDisplay(true, lastAction);
+  }
 }
 
 // Clear ops
 function clear() {
   buffers.num2 = 0;
 }
+
+// DONE: Behavior 1: Right after clicking equal, the next numeric input is saved to buffer 1
+// DONE: Behavior 2: When both buffers are filled, the next operator input will trigger the calculation using and saved the new operator
+// DONE: Behavior 3: Right after clicking equal, clicking the next operator input will save result to buffer 1
+// DONE: Behavior 4: When both buffers are filled, clicking equal repeatedly will trigger the same calculation
+// DONE: Behavior 5: When only buffer 1 is filled, clicking operator will simply swap the operation sign.
+// DONE: Behavior 6: Support using minus button as negative
 // TODO: Swap AC to C when first non-zero input is register
 // TODO: Keyboard support
 
