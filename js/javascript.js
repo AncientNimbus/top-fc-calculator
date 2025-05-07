@@ -59,7 +59,11 @@ function updateDisplay(isEval = false, data = buffers) {
       return value;
     }
 
-    if (value.length < 15 || value == 0) {
+    if (value === "Undefined") {
+      return "Undefined :(";
+    }
+
+    if (String(value).length < 15 || value == 0) {
       return Number(value);
     } else {
       // BUG: e-notation handling not working properly
@@ -75,6 +79,10 @@ function updateDisplay(isEval = false, data = buffers) {
  * @param {string} num
  */
 function insertNumber(num = "12345.678") {
+  if (num != "0" && buffers.num1 == 0 && !isNum1Saved) {
+    updateAcButton(false); // Show "C" instead of "AC"
+  }
+
   if (isResultShown && num in numeric) {
     allClear();
     isResultShown = false;
@@ -131,41 +139,48 @@ function saveNumToBuffer(value) {
 function runOps(opsName, value) {
   switch (opsName) {
     case "ac":
-      allClear(output);
+      if (value === "AC") {
+        allClear();
+      } else {
+        clear();
+        updateAcButton(true);
+      }
       break;
     case "negate":
-      // DONE: Grab on screen value instead of always second buffer
       if (isResultShown) {
         buffers.num1 = lastAction.num1;
         buffers.num1 = ops.negate(Number(buffers.num1));
+        lastAction.num1 = buffers.num1;
+        updateDisplay(true, buffers);
       } else {
         !isNum1Saved
           ? (buffers.num1 = ops.negate(Number(buffers.num1)))
           : (buffers.num2 = ops.negate(Number(buffers.num2)));
+        updateDisplay();
       }
-      updateDisplay();
       break;
     case "percent":
-      // DONE: Grab on screen value instead of always second buffer
       if (isResultShown) {
-        // If displaying a result, apply percent to that result
         buffers.num1 = lastAction.num1;
         buffers.num1 = ops.percent(Number(buffers.num1));
+        lastAction.num1 = buffers.num1;
+        updateDisplay(true, buffers);
       } else {
         !isNum1Saved
           ? (buffers.num1 = ops.percent(Number(buffers.num1)))
           : (buffers.num2 = ops.percent(Number(buffers.num2)));
+        updateDisplay();
       }
-      updateDisplay();
       break;
     case "eq":
       if (isNum1Saved && buffers.op !== null) {
         calculate();
         lastAction = { ...buffers };
-        buffers.num1 = 0;
+        buffers.num1 = lastAction.num1;
         buffers.num2 = 0;
         buffers.op = null;
-      } else if (isNum1Saved && buffers.op === null) {
+        isNum1Saved = false;
+      } else if ((isNum1Saved && buffers.op === null) || isResultShown) {
         // Repeat last
         console.log("repeat last");
         calculate(true);
@@ -220,6 +235,8 @@ function allClear() {
   buffers.op = null;
   isNum1Saved = false;
   isResultShown = false;
+
+  updateAcButton(true);
   updateDisplay();
 
   console.log("All value cleared!");
@@ -230,28 +247,31 @@ function calculate(repeatLast) {
     buffers.num1 = ops[buffers.op](Number(buffers.num1), Number(buffers.num2));
     updateDisplay(true, buffers);
   } else {
-    console.log(lastAction);
+    if (!isResultShown) {
+      lastAction.num1 = buffers.num1;
+    }
+
     lastAction.num1 = ops[lastAction.op](
       Number(lastAction.num1),
       Number(lastAction.num2)
     );
+
     buffers.num1 = lastAction.num1;
     updateDisplay(true, lastAction);
   }
 }
 
-// Clear ops
 function clear() {
   buffers.num2 = 0;
 }
 
-// DONE: Behavior 1: Right after clicking equal, the next numeric input is saved to buffer 1
-// DONE: Behavior 2: When both buffers are filled, the next operator input will trigger the calculation using and saved the new operator
-// DONE: Behavior 3: Right after clicking equal, clicking the next operator input will save result to buffer 1
-// DONE: Behavior 4: When both buffers are filled, clicking equal repeatedly will trigger the same calculation
-// DONE: Behavior 5: When only buffer 1 is filled, clicking operator will simply swap the operation sign.
-// DONE: Behavior 6: Support using minus button as negative
-// TODO: Swap AC to C when first non-zero input is register
+function updateAcButton(showAC = true) {
+  const acButton = document.querySelector("#cmd-ac .btn-txt");
+  if (acButton) {
+    acButton.textContent = showAC ? "AC" : "C";
+  }
+}
+
 // TODO: Keyboard support
 
 function debug(isOn = true) {
