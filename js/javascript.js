@@ -5,7 +5,6 @@ const buffers = {
   num2: 0,
   op: null,
 };
-let lastAction = buffers;
 const ops = {
   sum: (x, y) => x + y,
   sub: (x, y) => x - y,
@@ -14,6 +13,7 @@ const ops = {
   negate: (x) => (x !== 0 ? x * -1 : 0),
   percent: (x) => (x * 0.01).toFixed(10),
 };
+let lastAction = buffers;
 let isNum1Saved = false;
 let isResultShown = false;
 
@@ -22,7 +22,7 @@ function initCal() {
   allClear();
   insertNumber(0);
 
-  console.log("Calculator initialized");
+  console.log("Calculator by Ancient Nimbus \nThanks for checking this out!");
 }
 
 // Get value from inputs
@@ -72,12 +72,8 @@ function updateDisplay(isEval = false, data = buffers) {
   };
 
   display.textContent = processValue(isEval, data);
-  debug();
 }
 
-/**
- * @param {string} num
- */
 function insertNumber(num = "12345.678") {
   if (num != "0" && buffers.num1 == 0 && !isNum1Saved) {
     updateAcButton(false); // Show "C" instead of "AC"
@@ -102,8 +98,6 @@ function insertNumber(num = "12345.678") {
     let current = 0;
     current = valueInBuffer;
     const hasDot = String(current).includes(".");
-
-    console.log(`valueInBuffer: ${valueInBuffer}`);
 
     if (valueInBuffer == "0" && num == "-") {
       current = "-";
@@ -213,20 +207,16 @@ function runOps(opsName, value) {
       }
 
       if (buffers.op !== null && buffers.num2 != 0 && buffers.num2 != "-") {
-        console.log("a");
         calculate();
         buffers.op = opsName;
       } else {
-        console.log("b");
         if (buffers.num1 !== "-") buffers.op = opsName;
         isNum1Saved = buffers.num1 !== "-" ? true : false;
-        console.log(isNum1Saved);
       }
       clear();
-      console.log(buffers);
       break;
   }
-  debug();
+  //   debug();
 }
 
 function allClear() {
@@ -238,8 +228,6 @@ function allClear() {
 
   updateAcButton(true);
   updateDisplay();
-
-  console.log("All value cleared!");
 }
 
 function calculate(repeatLast) {
@@ -273,6 +261,42 @@ function updateAcButton(showAC = true) {
 }
 
 // TODO: Keyboard support
+function getKeyboardInput() {
+  document.addEventListener("keydown", (e) => {
+    const key = e.key;
+    console.log(`Key pressed: ${key}`);
+
+    if (!isNaN(parseInt(key)) || key === ".") {
+      console.log(`Key pressed: ${key}`);
+      insertNumber(key);
+      return;
+    }
+
+    switch (key) {
+      case "+":
+        runOps("sum", "+");
+        break;
+      case "-":
+        runOps("sub", "&#8722;");
+        break;
+      case "*":
+        runOps("mul", "&#215;");
+        break;
+      case "/":
+        runOps("div", "&#247;");
+        break;
+      case "Clear":
+        runOps("ac", "AC");
+        break;
+      case "Backspace":
+        runOps("ac", "C");
+        break;
+      case "Enter":
+        runOps("eq", "=");
+        break;
+    }
+  });
+}
 
 function debug(isOn = true) {
   if (isOn) {
@@ -284,3 +308,4 @@ function debug(isOn = true) {
 
 initCal();
 getBtnInput();
+getKeyboardInput();
