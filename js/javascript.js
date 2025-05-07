@@ -13,10 +13,11 @@ const ops = {
   negate: (x) => (x !== 0 ? x * -1 : 0),
   percent: (x) => x * 0.01,
 };
+let isNum1Saved = false;
 
 // Init calculator
 function initCal(display) {
-  console.log("Welcome!");
+  //   console.log("Welcome!");
 
   allClear(display);
   insertNumber(display, 0);
@@ -48,27 +49,40 @@ function getBtnInput(display) {
   });
 }
 
-// Display number
+// TODO: Update display
+function updateDisplay(display) {
+  display.textContent = !isNum1Saved ? buffers.num1 : buffers.num2;
+}
+// Insert number
 /**
  * @param {HTMLDivElement} display
  * @param {string} num
  */
 function insertNumber(display, num = "12345.678") {
-  const prevValue = Number(display.textContent);
-  let currentValue = prevValue;
-  if (display.textContent === "0" && num != 0) {
-    // Replace 0
-    display.textContent = num in numeric ? num : "0.";
-    currentValue = Number(display.textContent);
-  } else if (display.textContent !== "0") {
-    // Append number
-    display.textContent += num;
-    currentValue = Number(display.textContent);
+  const processInput = (valueInBuffer) => {
+    let current = 0;
+    current = valueInBuffer;
+    const hasDot = String(current).includes(".");
+
+    if (valueInBuffer == "0" && num != 0) {
+      current = num in numeric ? num : "0.";
+    } else if (valueInBuffer != "0") {
+      if ((num === "." && !hasDot) || num in numeric) {
+        current += num;
+      }
+    }
+    saveNumToBuffer(current);
+  };
+
+  if (!isNum1Saved) {
+    // Process num1
+    processInput(buffers.num1);
+  } else {
+    // Process num2
+    processInput(buffers.num2);
   }
 
-  console.log(`Output value: ${currentValue}`);
-
-  saveNumToBuffer(currentValue);
+  updateDisplay(display);
 
   console.log(`first: ${buffers.num1}`);
   console.log(`ops: ${buffers.op}`);
@@ -82,7 +96,7 @@ function saveNumToBuffer(value) {
     buffers.num2 = value;
   }
 }
-// TODO: Update display
+
 // TODO: Save operator value
 // TODO: Save second number value
 // TODO: e-notation conversion (large value)
@@ -93,31 +107,34 @@ function runOps(opsName, value) {
       allClear(output);
       break;
     case "negate":
-      buffers.op === null
+      isNum1Saved
         ? (buffers.num1 = ops.negate(buffers.num1))
         : (buffers.num2 = ops.negate(buffers.num2));
       console.log(buffers);
       break;
     case "percent":
-      buffers.op === null
+      isNum1Saved
         ? (buffers.num1 = ops.percent(buffers.num1))
         : (buffers.num2 = ops.percent(buffers.num2));
       console.log(buffers);
       break;
     case "eq":
+      // Push result to buffer 1, keep buffer 2
       break;
     default:
       buffers.op = opsName;
+      isNum1Saved = true;
       console.log(buffers);
       break;
   }
 }
 
 function allClear(display) {
-  display.textContent = 0;
   buffers.num1 = 0;
   buffers.num2 = 0;
   buffers.op = null;
+  isNum1Saved = false;
+  updateDisplay(display);
 
   console.log("All value cleared!");
 }
