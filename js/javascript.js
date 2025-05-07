@@ -63,12 +63,21 @@ function updateDisplay(isEval = false, data = buffers) {
       return "Undefined :(";
     }
 
-    if (String(value).length < 15 || value == 0) {
-      return Number(value);
-    } else {
-      // BUG: e-notation handling not working properly
-      return Number(value);
+    if (isEval && typeof value === "number" && !Number.isInteger(value)) {
+      // Capture non-integer
+      return Number(value.toFixed(6));
     }
+
+    const num = Number(value);
+    const str = num.toString();
+
+    // Use e-notation for very long numbers
+    if (str.length > 14) {
+      return num.toExponential(3);
+    }
+
+    // For all other cases, return the number normally
+    return num;
   };
 
   display.textContent = processValue(isEval, data);
@@ -176,7 +185,6 @@ function runOps(opsName, value) {
         isNum1Saved = false;
       } else if ((isNum1Saved && buffers.op === null) || isResultShown) {
         // Repeat last
-        console.log("repeat last");
         calculate(true);
       }
       break;
@@ -260,14 +268,11 @@ function updateAcButton(showAC = true) {
   }
 }
 
-// TODO: Keyboard support
 function getKeyboardInput() {
   document.addEventListener("keydown", (e) => {
     const key = e.key;
-    console.log(`Key pressed: ${key}`);
 
     if (!isNaN(parseInt(key)) || key === ".") {
-      console.log(`Key pressed: ${key}`);
       insertNumber(key);
       return;
     }
